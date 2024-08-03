@@ -2,6 +2,7 @@ package com.example.hust_map.ultis
 
 import com.amap.api.maps.model.LatLng
 import com.amap.api.services.core.LatLonPoint
+import com.example.hust_map.R
 import java.text.DecimalFormat
 
 
