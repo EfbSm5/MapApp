@@ -39,9 +39,9 @@ fun ShowSearchScreen(
     searchForPoi: (keyword: String) -> Unit,
     onSelected: (poiItem: PoiItemV2) -> Unit
 ) {
-    var keyword by remember { mutableStateOf("") }
-    if (keyword.isNotEmpty()) {
-        searchForPoi(keyword)
+    val keyword = remember { mutableStateOf("") }
+    if (keyword.value.isNotEmpty()) {
+        searchForPoi(keyword.value)
     }
     Surface(
         color = MaterialTheme.colorScheme.surface
@@ -59,20 +59,14 @@ fun ShowSearchScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clickable { toShowMapScreen() })
-                    TextField(value = keyword, onValueChange = { keyword = it })
+                    TextField(value = keyword.value, onValueChange = { keyword.value = it })
                     Icon(
                         Icons.Default.Search,
                         contentDescription = null,
                         modifier = Modifier
                             .size(30.dp)
                             .clickable {
-                                searchForPoi(keyword)
+                                searchForPoi(keyword.value)
                             })
                 }
             }

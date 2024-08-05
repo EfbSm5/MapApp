@@ -1,10 +1,16 @@
 package com.example.hust_map.data
 
+import android.content.Context
+import com.amap.api.maps.MapView
+import com.amap.api.maps.model.BitmapDescriptorFactory
 import com.amap.api.maps.model.LatLng
+import com.amap.api.maps.model.Marker
+import com.amap.api.maps.model.MarkerOptions
 
 
 object MarkersInSchool {
-    val MarkersInSchool = ArrayList<Markers>(
+    private var points: ArrayList<Marker> = ArrayList()
+    private val MarkersInSchool = ArrayList<Markers>(
         listOf(
             Markers("南大门", LatLng(30.507950, 114.413514)),
             Markers("西十二教学楼", LatLng(30.508906, 114.407151)),
@@ -33,4 +39,71 @@ object MarkersInSchool {
             Markers("校医院", LatLng(30.517255, 114.414325))
         )
     )
+
+    fun initPoints(mapView: MapView, context: Context) {
+        Thread {
+            val list = getMarkerData(context)
+            points.clear()
+            for (i in 0..<MarkersInSchool.size) {
+                points.add(
+                    mapView.map.addMarker(
+                        MarkerOptions().position(MarkersInSchool[i].latLng)
+                            .title(MarkersInSchool[i].name).icon(
+                                if (list[i] == 0) {
+                                    BitmapDescriptorFactory.defaultMarker(1f)
+                                } else {
+                                    BitmapDescriptorFactory.defaultMarker(19f)
+                                }
+                            )
+                    )
+                )
+
+            }
+        }.start()
+    }
+
+    fun getPoints(): ArrayList<Marker> {
+        return points
+    }
+
+    private fun getMarkerData(context: Context): List<Int> {
+        val sharedPreferences = context.getSharedPreferences("markers", Context.MODE_PRIVATE)
+        val listString = sharedPreferences.getString("int_list_key", null)
+        return listString?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
+    }
+
+    fun updateMarkerData(context: Context, location: Int) {
+        val sharedPreferences = context.getSharedPreferences("markers", Context.MODE_PRIVATE)
+        val originalListString = sharedPreferences.getString("int_list_key", null)
+        if (originalListString != null) {
+            val originalIntList = originalListString.split(",").map { it.toInt() }.toMutableList()
+            originalIntList[location] = 1
+            val updatedListString = originalIntList.joinToString(separator = ",")
+            with(sharedPreferences.edit()) {
+                putString("int_list_key", updatedListString)
+                apply()
+            }
+        }
+    }
+
+    fun initMarkerData(context: Context) {
+        val sharedPreferences = context.getSharedPreferences("markers", Context.MODE_PRIVATE)
+        val hasKey = sharedPreferences.contains("int_list_key")
+        if (!hasKey) {
+            val intList = List(25) { 0 }
+            val listString = intList.joinToString(separator = ",")
+            with(sharedPreferences.edit()) {
+                putString("int_list_key", listString)
+                apply()
+            }
+        }
+    }
+
+    fun updateAndChangeMarkerIcon(marker: Marker, context: Context) {
+        val number = getPoints().indexOf(marker)
+        updateMarkerData(context = context, number)
+        marker.setIcon(BitmapDescriptorFactory.defaultMarker(1f))
+    }
 }
+
+

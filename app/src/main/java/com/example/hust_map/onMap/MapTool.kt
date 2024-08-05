@@ -1,4 +1,4 @@
-package com.example.hust_map
+package com.example.hust_map.onMap
 
 import android.content.Context
 import com.amap.api.maps.CameraUpdateFactory
@@ -9,6 +9,7 @@ import com.amap.api.maps.model.MarkerOptions
 import com.amap.api.services.core.AMapException
 import com.amap.api.services.core.LatLonPoint
 import com.amap.api.services.core.PoiItemV2
+import com.amap.api.services.core.ServiceSettings
 import com.amap.api.services.poisearch.PoiResultV2
 import com.amap.api.services.poisearch.PoiSearchV2
 import com.amap.api.services.route.BusRouteResult
@@ -16,7 +17,7 @@ import com.amap.api.services.route.DriveRouteResult
 import com.amap.api.services.route.RideRouteResult
 import com.amap.api.services.route.RouteSearch
 import com.amap.api.services.route.WalkRouteResult
-import com.example.hust_map.data.MarkersInSchool
+import com.example.hust_map.R
 import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
 import com.example.hust_map.overlay.WalkRouteOverlay
 import com.example.hust_map.ultis.MapUtil.convertToLatLng
@@ -27,9 +28,10 @@ class MapTool(
     private val callBack: MapToolCallBack
 ) : PoiSearchV2.OnPoiSearchListener, RouteSearch.OnRouteSearchListener {
     private var routeSearch: RouteSearch? = null
-
     fun searchForPoi(keyword: String) {
-        val thread = Thread {
+        Thread {
+            ServiceSettings.updatePrivacyShow(context, true, true)
+            ServiceSettings.updatePrivacyAgree(context, true)
             val query: PoiSearchV2.Query = PoiSearchV2.Query(keyword, "", "027")
             query.pageSize = 5
             query.pageNum = 1
@@ -40,8 +42,7 @@ class MapTool(
             } catch (e: AMapException) {
                 throw RuntimeException(e)
             }
-        }
-        thread.start()
+        }.start()
     }
 
     override fun onPoiSearched(p0: PoiResultV2?, p1: Int) {
@@ -81,6 +82,7 @@ class MapTool(
     override fun onDriveRouteSearched(p0: DriveRouteResult?, p1: Int) {}
 
     override fun onWalkRouteSearched(walkRouteResult: WalkRouteResult?, p1: Int) {
+        callBack.returnMsg("由于测试，将出发点定于南大门")
         mapView.map.clear() // 清理地图上的所有覆盖物
         if (p1 != AMapException.CODE_AMAP_SUCCESS) {
             callBack.returnMsg("出错了")
@@ -113,19 +115,16 @@ class MapTool(
         callBack.returnMsg("你选择了${poiItemV2.title}")
     }
 
-    fun initPoints() {
-        Thread {
-            for (poi in MarkersInSchool.MarkersInSchool) {
-                mapView.map.addMarker(
-                    MarkerOptions().position(poi.latLng).title(poi.name)
-                )
-            }
-        }.start()
-    }
 }
+
 
 interface MapToolCallBack {
     fun returnPoi(poiItems: ArrayList<PoiItemV2>)
     fun returnMsg(word: String)
     fun returnPoint(point: LatLonPoint)
 }
+
+
+
+
+

@@ -1,5 +1,6 @@
 package com.example.hust_map.onMap
 
+import android.annotation.SuppressLint
 import android.content.ComponentCallbacks
 import android.content.Context
 import android.content.res.Configuration
@@ -26,8 +27,12 @@ import com.amap.api.maps.model.MyLocationStyle
 import com.amap.api.maps.model.Poi
 import com.amap.api.maps.model.VisibleRegion
 import com.amap.api.services.core.LatLonPoint
+import com.example.hust_map.data.MarkersInSchool.updateAndChangeMarkerIcon
+import com.example.hust_map.data.MarkersInSchool.getPoints
+import com.example.hust_map.data.MarkersInSchool.initPoints
 import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
 import com.example.hust_map.ultis.MapUtil
+import kotlin.math.abs
 
 
 class MapLife(context: Context, private val callBack: MapLifeCallBack) : LocationSource,
@@ -38,6 +43,7 @@ class MapLife(context: Context, private val callBack: MapLifeCallBack) : Locatio
             .setOnceLocationLatest(true).setNeedAddress(true).setHttpTimeOut(6000)
     private var mLocationClient: AMapLocationClient? = AMapLocationClient(context)
     private var mListener: OnLocationChangedListener? = null
+    private val _context = context
 
     @Composable
     fun MapLifecycle(mapView: MapView) {
@@ -45,6 +51,7 @@ class MapLife(context: Context, private val callBack: MapLifeCallBack) : Locatio
         mLocationClient!!.setLocationListener(this)
         val context = LocalContext.current
         val lifecycle = LocalLifecycleOwner.current.lifecycle
+        initPoints(mapView, LocalContext.current)
         DisposableEffect(context, lifecycle, mapView) {
             val mapLifecycleObserver = mapView.lifecycleObserver()
             val callbacks = mapView.componentCallbacks()
@@ -130,10 +137,12 @@ class MapLife(context: Context, private val callBack: MapLifeCallBack) : Locatio
         callBack.returnEndLocation(convertToLatLonPoint(p0!!.coordinate), p0.name)
     }
 
-    override fun onMarkerClick(p0: Marker?): Boolean {
-        callBack.returnEndLocation((convertToLatLonPoint(p0!!.position)), p0.title)
+    @SuppressLint("ResourceType", "InflateParams")
+    override fun onMarkerClick(marker: Marker?): Boolean {
+        callBack.returnEndLocation((convertToLatLonPoint(marker!!.position)), marker.title)
         return true
     }
+
 
     override fun onLocationChanged(aMapLocation: AMapLocation?) {
         if (aMapLocation!!.errorCode == 0) {
@@ -142,12 +151,16 @@ class MapLife(context: Context, private val callBack: MapLifeCallBack) : Locatio
             val longitude = aMapLocation.longitude
             val point = LatLng(latitude, longitude)
             callBack.returnNowLocation(MapUtil.convertToLatLonPoint(point))
-//            if (isNearMarker(point, markerPosition)) {
-//                // 如果接近Marker，改变其icon
-//                changeMarkerIcon(marker);
-//            }
+            val points = getPoints()
+            for (marker in points) {
+                if (abs(marker.position.latitude - point.latitude) < 0.0005 || abs(marker.position.longitude - point.longitude) < 0.0005) {
+                    updateAndChangeMarkerIcon(marker, _context)
+                }
+
+            }
         }
     }
+
 
 }
 

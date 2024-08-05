@@ -37,24 +37,7 @@ fun ShowMapScreen(
         color = MaterialTheme.colorScheme.surface
     ) {
         Column {
-            Spacer(modifier = Modifier.height(70.dp))
-            Text(
-                text = "这是一个地图APP",
-                textAlign = TextAlign.Center,
-                style = TextStyle(fontSize = 40.sp),
-                color = MaterialTheme.colorScheme.outline,
-                modifier = Modifier
-                    .weight(1F)
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-            )
-            Button(
-                onClick = { toSearchScreen() },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text(text = "搜索地址")
-                Icon(imageVector = Icons.Default.Search, contentDescription = "search")
-            }
+            Spacer(modifier = Modifier.height(2f.dp))
             AndroidView(modifier = Modifier.weight(3F), factory = { mapView })
             Row(
                 modifier = Modifier
