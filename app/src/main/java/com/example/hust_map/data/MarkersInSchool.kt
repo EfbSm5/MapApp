@@ -72,7 +72,7 @@ object MarkersInSchool {
         return listString?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
     }
 
-    fun updateMarkerData(context: Context, location: Int) {
+    private fun updateMarkerData(context: Context, location: Int) {
         val sharedPreferences = context.getSharedPreferences("markers", Context.MODE_PRIVATE)
         val originalListString = sharedPreferences.getString("int_list_key", null)
         if (originalListString != null) {
@@ -86,15 +86,15 @@ object MarkersInSchool {
         }
     }
 
-    fun initMarkerData(context: Context) {
+    fun initMarkerData(context: Context, reset: Boolean) {
         val sharedPreferences = context.getSharedPreferences("markers", Context.MODE_PRIVATE)
         val hasKey = sharedPreferences.contains("int_list_key")
-        if (!hasKey) {
+        if (!hasKey || reset) {
             val intList = List(25) { 0 }
             val listString = intList.joinToString(separator = ",")
             with(sharedPreferences.edit()) {
                 putString("int_list_key", listString)
-                apply()
+                commit()
             }
         }
     }
@@ -102,7 +102,11 @@ object MarkersInSchool {
     fun updateAndChangeMarkerIcon(marker: Marker, context: Context) {
         val number = getPoints().indexOf(marker)
         updateMarkerData(context = context, number)
-        marker.setIcon(BitmapDescriptorFactory.defaultMarker(1f))
+        marker.setIcon(BitmapDescriptorFactory.defaultMarker(19f))
+    }
+
+    fun searchFromMarkers(keyword: String): Markers? {
+        return MarkersInSchool.firstOrNull { it.name == keyword }
     }
 }
 

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.Icon
@@ -20,24 +19,22 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.amap.api.services.core.PoiItemV2
+import com.example.hust_map.data.Markers
 
 @Composable
 fun ShowSearchScreen(
-    list: ArrayList<PoiItemV2>,
+    poiList: ArrayList<Markers>,
     toShowMapScreen: () -> Unit,
     searchForPoi: (keyword: String) -> Unit,
-    onSelected: (poiItem: PoiItemV2) -> Unit
+    onSelected: (marker: Markers) -> Unit
 ) {
     val keyword = remember { mutableStateOf("") }
     if (keyword.value.isNotEmpty()) {
@@ -47,8 +44,7 @@ fun ShowSearchScreen(
         color = MaterialTheme.colorScheme.surface
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item { Spacer(modifier = Modifier.height(50.dp)) }
             item {
@@ -60,8 +56,7 @@ fun ShowSearchScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextField(value = keyword.value, onValueChange = { keyword.value = it })
-                    Icon(
-                        Icons.Default.Search,
+                    Icon(Icons.Default.Search,
                         contentDescription = null,
                         modifier = Modifier
                             .size(30.dp)
@@ -71,28 +66,26 @@ fun ShowSearchScreen(
                 }
             }
             item { Spacer(modifier = Modifier.height(50.dp)) }
-            if (list.isNotEmpty()) {
-                items(list) { poiItem ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .clickable {
-                                onSelected(poiItem)
-                                toShowMapScreen()
-                            },
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = poiItem.title,
-                            style = TextStyle(fontSize = 20.sp),
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
-                    DividerDefaults
+            items(poiList) { poiItem ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .clickable {
+                            onSelected(poiItem)
+                            toShowMapScreen()
+                        },
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = poiItem.name,
+                        style = TextStyle(fontSize = 20.sp),
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
+                DividerDefaults
             }
         }
     }

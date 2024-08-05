@@ -4,7 +4,6 @@ import android.content.Context
 import com.amap.api.maps.CameraUpdateFactory
 import com.amap.api.maps.MapView
 import com.amap.api.maps.model.BitmapDescriptorFactory
-import com.amap.api.maps.model.LatLng
 import com.amap.api.maps.model.MarkerOptions
 import com.amap.api.services.core.AMapException
 import com.amap.api.services.core.LatLonPoint
@@ -18,6 +17,8 @@ import com.amap.api.services.route.RideRouteResult
 import com.amap.api.services.route.RouteSearch
 import com.amap.api.services.route.WalkRouteResult
 import com.example.hust_map.R
+import com.example.hust_map.data.Markers
+import com.example.hust_map.data.MarkersInSchool
 import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
 import com.example.hust_map.overlay.WalkRouteOverlay
 import com.example.hust_map.ultis.MapUtil.convertToLatLng
@@ -28,8 +29,15 @@ class MapTool(
     private val callBack: MapToolCallBack
 ) : PoiSearchV2.OnPoiSearchListener, RouteSearch.OnRouteSearchListener {
     private var routeSearch: RouteSearch? = null
+
+
     fun searchForPoi(keyword: String) {
         Thread {
+            val result = MarkersInSchool.searchFromMarkers(keyword = keyword)
+            if (result != null) {
+                callBack.returnPoi(arrayListOf(result))
+                return@Thread
+            }
             ServiceSettings.updatePrivacyShow(context, true, true)
             ServiceSettings.updatePrivacyAgree(context, true)
             val query: PoiSearchV2.Query = PoiSearchV2.Query(keyword, "", "027")
@@ -46,7 +54,9 @@ class MapTool(
     }
 
     override fun onPoiSearched(p0: PoiResultV2?, p1: Int) {
-        callBack.returnPoi(p0!!.pois)
+        val arrayList =
+            p0!!.pois.map { poi -> Markers(poi.title, convertToLatLng(poi.latLonPoint)) }
+        callBack.returnPoi(ArrayList(arrayList))
     }
 
     override fun onPoiItemSearched(p0: PoiItemV2?, p1: Int) {
@@ -107,19 +117,17 @@ class MapTool(
 
     override fun onRideRouteSearched(p0: RideRouteResult?, p1: Int) {}
 
-    fun onSelected(poiItemV2: PoiItemV2) {
-        val latLonPoint = poiItemV2.latLonPoint
-        val point = LatLng(latLonPoint.latitude, latLonPoint.longitude)
+    fun onSelected(markers: Markers) {
+        val point = markers.latLng
         mapView.map.animateCamera(CameraUpdateFactory.newLatLngZoom(point, 18f))
         callBack.returnPoint(convertToLatLonPoint(point))
-        callBack.returnMsg("你选择了${poiItemV2.title}")
+        callBack.returnMsg("你选择了${markers.name}")
     }
-
 }
 
 
 interface MapToolCallBack {
-    fun returnPoi(poiItems: ArrayList<PoiItemV2>)
+    fun returnPoi(items: ArrayList<Markers>)
     fun returnMsg(word: String)
     fun returnPoint(point: LatLonPoint)
 }

@@ -13,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -39,8 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.amap.api.maps.AMap
 import com.amap.api.maps.AMapOptions
@@ -49,8 +46,8 @@ import com.amap.api.maps.MapsInitializer
 import com.amap.api.maps.model.CameraPosition
 import com.amap.api.maps.model.LatLng
 import com.amap.api.services.core.LatLonPoint
-import com.amap.api.services.core.PoiItemV2
 import com.amap.apis.utils.core.api.AMapUtilCoreApi
+import com.example.hust_map.data.Markers
 import com.example.hust_map.data.MarkersInSchool.initMarkerData
 import com.example.hust_map.data.MarkersInSchool.initPoints
 import com.example.hust_map.onMap.MapLife
@@ -65,44 +62,43 @@ import com.example.hust_map.ui.theme.Hust_mapTheme
 @SuppressLint("MutableCollectionMutableState")
 class MainActivity : ComponentActivity(), MapToolCallBack, MapLifeCallBack {
     private val TAG = "MainActivity"
-    private lateinit var mapView: MapView
     private var mEndPoint by mutableStateOf(LatLonPoint(0.0, 0.0))
-    private var poiItemV2s by mutableStateOf(ArrayList<PoiItemV2>())
+    private var pois by mutableStateOf(ArrayList<Markers>())
     private var mStartPoint: LatLonPoint? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handlePermission()
-        initMarkerData(this)
+        initMarkerData(this, false)
         enableEdgeToEdge()
         setContent {
             Hust_mapTheme {
-                mapView = MapView(
-                    LocalContext.current,
-                    AMapOptions().camera(CameraPosition(LatLng(30.513197, 114.413301), 18f, 0f, 0f))
+                val mapView = MapView(
+                    this, AMapOptions().camera(
+                        CameraPosition(
+                            LatLng(30.513197, 114.413301), 18f, 0f, 0f
+                        )
+                    )
                 )
                 MapLife(this, this).MapLifecycle(mapView = mapView)
-                MapApp()
+                MapApp(mapView = mapView, changeMap = {
+                    if (mapView.map.mapType == AMap.MAP_TYPE_NORMAL) {
+                        mapView.map.mapType = AMap.MAP_TYPE_SATELLITE
+                    } else if (mapView.map.mapType == AMap.MAP_TYPE_SATELLITE) {
+                        mapView.map.mapType = AMap.MAP_TYPE_NORMAL
+                    }
+                }, factoryReset = {
+                    initMarkerData(this, true)
+                    initPoints(mapView = mapView, this)
+                })
             }
         }
     }
 
-    @Preview
-    @Composable
-    fun Preview() {
-        MapsInitializer.updatePrivacyShow(this, true, true)
-        MapsInitializer.updatePrivacyAgree(this, true)
-        AMapUtilCoreApi.setCollectInfoEnable(true)
-        mapView = MapView(
-            LocalContext.current,
-            AMapOptions().camera(CameraPosition(LatLng(30.513197, 114.413301), 18f, 0f, 0f))
-        )
-        MapApp()
-    }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    private fun MapApp() {
+    private fun MapApp(mapView: MapView, changeMap: () -> Unit, factoryReset: () -> Unit) {
         val mapTool = MapTool(context = this, mapView = mapView, this)
         var currentScreen: State by remember { mutableStateOf(State.Map) }
         var expanded by remember { mutableStateOf(false) }
@@ -119,15 +115,13 @@ class MainActivity : ComponentActivity(), MapToolCallBack, MapLifeCallBack {
                         .wrapContentSize(Alignment.TopStart)
                 ) {
                     DropdownMenuItem(text = { Text(text = "更换地图显示样式") }, onClick = {
-                        if (mapView.map.mapType == AMap.MAP_TYPE_NORMAL) {
-                            AMap.MAP_TYPE_SATELLITE
-                        } else if (mapView.map.mapType == AMap.MAP_TYPE_SATELLITE) {
-                            AMap.MAP_TYPE_NORMAL
-                        }
+                        changeMap()
                     })
-                    DropdownMenuItem(text = { Text(text = "重置所有") }, onClick = { })
+                    DropdownMenuItem(text = { Text(text = "重置所有") },
+                        onClick = { factoryReset() })
                 }
             })
+
         }, bottomBar = {
             NavigationBar(modifier = Modifier.height(70.dp)) {
                 Button(onClick = { currentScreen = State.Map }, modifier = Modifier.weight(2f)) {
@@ -139,6 +133,7 @@ class MainActivity : ComponentActivity(), MapToolCallBack, MapLifeCallBack {
                     Text(text = "搜索")
                 }
             }
+
         }) { paddingValues ->
             Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues)) {
                 Crossfade(targetState = currentScreen, label = "") { screen ->
@@ -162,9 +157,9 @@ class MainActivity : ComponentActivity(), MapToolCallBack, MapLifeCallBack {
                         }
 
                         State.Search -> {
-                            ShowSearchScreen(list = poiItemV2s,
+                            ShowSearchScreen(poiList = pois,
                                 toShowMapScreen = { currentScreen = State.Map },
-                                searchForPoi = { mapTool.searchForPoi(keyword = it) },
+                                searchForPoi = { mapTool.searchForPoi(it) },
                                 onSelected = { mapTool.onSelected(it) })
                         }
 
@@ -199,15 +194,16 @@ class MainActivity : ComponentActivity(), MapToolCallBack, MapLifeCallBack {
         }
     }
 
-    sealed interface State {
+
+    interface State {
         data object Map : State
         data object Search : State
         data object Route : State
     }
 
+    override fun returnPoi(items: ArrayList<Markers>) {
+        pois = items
 
-    override fun returnPoi(poiItems: ArrayList<PoiItemV2>) {
-        poiItemV2s = poiItems
     }
 
     override fun returnMsg(word: String) {

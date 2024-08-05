@@ -140,6 +140,7 @@ class MapLife(context: Context, private val callBack: MapLifeCallBack) : Locatio
     @SuppressLint("ResourceType", "InflateParams")
     override fun onMarkerClick(marker: Marker?): Boolean {
         callBack.returnEndLocation((convertToLatLonPoint(marker!!.position)), marker.title)
+        updateAndChangeMarkerIcon(marker,_context)
         return true
     }
 
@@ -156,12 +157,9 @@ class MapLife(context: Context, private val callBack: MapLifeCallBack) : Locatio
                 if (abs(marker.position.latitude - point.latitude) < 0.0005 || abs(marker.position.longitude - point.longitude) < 0.0005) {
                     updateAndChangeMarkerIcon(marker, _context)
                 }
-
             }
         }
     }
-
-
 }
 
 interface MapLifeCallBack {
