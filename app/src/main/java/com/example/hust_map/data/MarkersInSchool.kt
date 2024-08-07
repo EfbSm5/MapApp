@@ -81,7 +81,7 @@ object MarkersInSchool {
             val updatedListString = originalIntList.joinToString(separator = ",")
             with(sharedPreferences.edit()) {
                 putString("int_list_key", updatedListString)
-                apply()
+                commit()
             }
         }
     }
@@ -106,7 +106,7 @@ object MarkersInSchool {
     }
 
     fun searchFromMarkers(keyword: String): Markers? {
-        return MarkersInSchool.firstOrNull { it.name == keyword }
+        return MarkersInSchool.firstOrNull { it.name.contains(keyword) }
     }
 }
 

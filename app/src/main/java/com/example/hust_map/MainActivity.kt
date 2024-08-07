@@ -159,7 +159,9 @@ class MainActivity : ComponentActivity(), MapToolCallBack, MapLifeCallBack {
                         State.Search -> {
                             ShowSearchScreen(poiList = pois,
                                 toShowMapScreen = { currentScreen = State.Map },
-                                searchForPoi = { mapTool.searchForPoi(it) },
+                                searchForPoi = {
+                                    mapTool.searchForPoi(it)
+                                },
                                 onSelected = { mapTool.onSelected(it) })
                         }
 
@@ -202,12 +204,13 @@ class MainActivity : ComponentActivity(), MapToolCallBack, MapLifeCallBack {
     }
 
     override fun returnPoi(items: ArrayList<Markers>) {
+//        pois.clear()
+//        pois.addAll(items)
         pois = items
-
     }
 
     override fun returnMsg(word: String) {
-        Toast.makeText(this, word, Toast.LENGTH_LONG).show()
+        Toast.makeText(this, word, Toast.LENGTH_SHORT).show()
     }
 
     override fun returnPoint(point: LatLonPoint) {
