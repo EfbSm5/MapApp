@@ -1,6 +1,5 @@
 package com.example.hust_map.page
 
-import android.content.Context
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -36,27 +35,41 @@ import com.amap.api.maps.MapView
 import com.amap.api.maps.model.CameraPosition
 import com.amap.api.maps.model.LatLng
 import com.amap.api.services.core.LatLonPoint
-import com.example.hust_map.MainActivity.State
 import com.example.hust_map.data.Markers
+import com.example.hust_map.data.MarkersInSchool.initMarkerData
 import com.example.hust_map.data.MarkersInSchool.initPoints
-import com.example.hust_map.onMap.MapLife
-import com.example.hust_map.onMap.MapTool
+import com.example.hust_map.onMap.MapControllerCallBack
+import com.example.hust_map.onMap.MapSearchUtil
 
 @Composable
 fun MapApp() {
-    val mapTool = MapTool(context = context, mapView = mapView, callBack = {})
+    val context = LocalContext.current
     var currentScreen: State by remember { mutableStateOf(State.Map) }
-    var expanded by remember { mutableStateOf(false) }
-    var context = LocalContext.current
     val mapView = MapView(
-        this, AMapOptions().camera(
+        context, AMapOptions().camera(
             CameraPosition(
                 LatLng(30.513197, 114.413301), 18f, 0f, 0f
             )
         )
     )
-    MapLife(this, this).MapLifecycle(mapView = mapView)
-    MapAppSurface()
+    mapView.
+    var expanded by remember { mutableStateOf(false) }
+    val mapSearchUtil = MapSearchUtil(context = context, mapView = mapView, callBack = {
+        MapControllerCallBack() {
+
+        }
+    })
+
+    MapAppSurface(
+        expanded = expanded,
+        currentScreen = currentScreen,
+        onChangeExpanded = { expanded = it },
+        onFactoryReset = { initMarkerData(context = context, reset = true) },
+        onChangeScreen = { currentScreen = it },
+        onChangeMap = {}
+    )
+
+
 }
 
 

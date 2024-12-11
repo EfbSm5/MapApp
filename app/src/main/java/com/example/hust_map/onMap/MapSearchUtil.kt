@@ -23,10 +23,10 @@ import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
 import com.example.hust_map.overlay.WalkRouteOverlay
 import com.example.hust_map.ultis.MapUtil.convertToLatLng
 
-class MapTool(
+class MapSearchUtil(
     private val context: Context,
     private val mapView: MapView,
-    private val callBack: MapToolCallBack
+    private val callBack: () -> Unit
 ) : PoiSearchV2.OnPoiSearchListener, RouteSearch.OnRouteSearchListener {
     private var routeSearch: RouteSearch? = null
 
@@ -126,13 +126,8 @@ class MapTool(
 }
 
 
-interface MapToolCallBack {
+interface MapSearchCallBack {
     fun returnPoi(items: ArrayList<Markers>)
     fun returnMsg(word: String)
     fun returnPoint(point: LatLonPoint)
 }
-
-
-
-
-
