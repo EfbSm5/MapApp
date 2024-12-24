@@ -2,13 +2,9 @@ package com.example.hust_map.ultis
 
 import android.content.Context
 import android.widget.Toast
-import com.amap.api.maps.AMap.MAP_TYPE_NIGHT
 import com.amap.api.maps.AMap.MAP_TYPE_NORMAL
 import com.amap.api.maps.AMap.MAP_TYPE_SATELLITE
 import com.amap.api.maps.MapView
-import com.amap.api.maps.model.LatLng
-import com.amap.api.services.core.LatLonPoint
-import com.example.hust_map.R
 import java.text.DecimalFormat
 
 

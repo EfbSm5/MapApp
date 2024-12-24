@@ -21,11 +21,9 @@ import com.amap.api.maps.LocationSource
 import com.amap.api.maps.LocationSource.OnLocationChangedListener
 import com.amap.api.maps.MapView
 import com.amap.api.maps.model.LatLng
-import com.amap.api.maps.model.LatLngBounds
 import com.amap.api.maps.model.Marker
 import com.amap.api.maps.model.MyLocationStyle
 import com.amap.api.maps.model.Poi
-import com.amap.api.maps.model.VisibleRegion
 import com.example.hust_map.data.MarkersInSchool.updateAndChangeMarkerIcon
 import com.example.hust_map.data.MarkersInSchool.getPoints
 import com.example.hust_map.data.MarkersInSchool.initPoints
