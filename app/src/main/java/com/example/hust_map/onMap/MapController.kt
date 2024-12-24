@@ -34,9 +34,9 @@ import kotlin.math.abs
 
 class MapController(
     context: Context,
-    onPoiClick: (Poi?) -> Unit,
-    onMapClick: (LatLng?) -> Unit,
-    onMarkerClick: (Marker?) -> Unit
+    val poiClick: (Poi?) -> Unit,
+    val mapClick: (LatLng?) -> Unit,
+    val markerClick: (Marker?) -> Unit
 ) : LocationSource, AMap.OnMapClickListener, AMap.OnPOIClickListener, AMap.OnMarkerClickListener,
     AMapLocationListener {
     private var mLocationOption =
@@ -93,13 +93,13 @@ class MapController(
     private fun initMap(mapView: MapView) {
         mapView.map.setLocationSource(this@MapController)
         mapView.map.mapType = AMap.MAP_TYPE_SATELLITE
-        val visibleRegion = VisibleRegion(
-            LatLng(30.506589, 114.405456),
-            LatLng(30.505737, 114.434915),
-            LatLng(30.519343, 114.403142),
-            LatLng(30.517576, 114.440049),
-            LatLngBounds(LatLng(30.505633, 114.401235), LatLng(30.519878, 114.441127))
-        )
+//        val visibleRegion = VisibleRegion(
+//            LatLng(30.506589, 114.405456),
+//            LatLng(30.505737, 114.434915),
+//            LatLng(30.519343, 114.403142),
+//            LatLng(30.517576, 114.440049),
+//            LatLngBounds(LatLng(30.505633, 114.401235), LatLng(30.519878, 114.441127))
+//        )
         mapView.map.isMyLocationEnabled = true
         mapView.map.uiSettings.isMyLocationButtonEnabled = true
         mapView.map.myLocationStyle = MyLocationStyle().interval(2000)
@@ -130,19 +130,16 @@ class MapController(
     }
 
     override fun onMapClick(p0: LatLng?) {
-        onMapClick(p0)
+        mapClick(p0)
     }
 
     override fun onPOIClick(p0: Poi?) {
-        onPOIClick(p0)
+        poiClick(p0)
     }
 
     @SuppressLint("ResourceType", "InflateParams")
     override fun onMarkerClick(marker: Marker?): Boolean {
-        onMarkerClick(marker)
-        if (marker != null) {
-            updateAndChangeMarkerIcon(marker, _context)
-        }
+        markerClick(marker)
         return true
     }
 

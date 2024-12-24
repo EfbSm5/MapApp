@@ -1,7 +1,7 @@
 package com.example.hust_map.page
 
+import android.content.Context
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
@@ -40,15 +40,17 @@ import com.example.hust_map.data.Markers
 import com.example.hust_map.data.MarkersInSchool.initMarkerData
 import com.example.hust_map.data.MarkersInSchool.initPoints
 import com.example.hust_map.onMap.MapController
-import com.example.hust_map.onMap.MapControllerCallBack
 import com.example.hust_map.onMap.MapSearchUtil
 import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
+import com.example.hust_map.ultis.MapUtil.changeMapType
+import com.example.hust_map.ultis.MapUtil.showMsg
 
 @Composable
 fun MapApp() {
     val context = LocalContext.current
     var currentScreen: State by remember { mutableStateOf(State.Map) }
     var mEndPoint: LatLonPoint = convertToLatLonPoint(LatLng(30.513197, 114.413301))
+    var pois: List<Markers>? = null
     val mapView = MapView(
         context, AMapOptions().camera(
             CameraPosition(
@@ -56,37 +58,43 @@ fun MapApp() {
             )
         )
     )
-    val mapController = MapController(context = context, onPoiClick = {
+    val mapController = MapController(context = context, poiClick = {
         it.let {
             mEndPoint = convertToLatLonPoint(it!!.coordinate)
+            showMsg(context, it.name)
         }
-    }, onMapClick = {
+    }, mapClick = {
         it?.let {
             mEndPoint = convertToLatLonPoint(it)
         }
-    }, onMarkerClick = {
+    }, markerClick = {
         it?.let {
             mEndPoint = convertToLatLonPoint(it.position)
+            showMsg(context, it.title)
         }
     })
+    mapController.MapLifecycle(mapView)
     var expanded by remember { mutableStateOf(false) }
     val mapSearchUtil = MapSearchUtil(
         context = context, mapView = mapView,
-        onPoiSearched = { },
-        returnMsg = {},
-        returnPoint = {},
+        onPoiSearched = { pois = it },
+        returnMsg = { showMsg(context, it) },
+        returnPoint = { mEndPoint = it },
     )
     MapAppSurface(expanded = expanded,
         onChangeExpanded = { expanded = it },
         onFactoryReset = { initMarkerData(context = context, reset = true) },
         onChangeScreen = { currentScreen = it },
-        onChangeMap = {},
+        onChangeMap = { mapView.changeMapType() },
         content = {
             MapContent(
                 currentScreen = currentScreen,
                 mEndPoint = mEndPoint,
                 mapView = mapView,
                 onChangeMap = { currentScreen = it },
+                pois = pois,
+                context = context,
+                mapSearchUtil = mapSearchUtil,
             )
         })
 }
@@ -147,7 +155,13 @@ private fun Menu(onChangeMap: () -> Unit, onFactoryReset: () -> Unit) {
 
 @Composable
 private fun MapContent(
-    currentScreen: State, mEndPoint: LatLonPoint, mapView: MapView, onChangeMap: (State) -> Unit
+    pois: List<Markers>?,
+    context: Context,
+    currentScreen: State,
+    mEndPoint: LatLonPoint,
+    mapView: MapView,
+    mapSearchUtil: MapSearchUtil,
+    onChangeMap: (State) -> Unit
 ) {
     Crossfade(targetState = currentScreen, label = "") { screen ->
         when (screen) {
@@ -155,30 +169,30 @@ private fun MapContent(
                 ShowMapScreen(mEndPoint = mEndPoint, mapView = mapView, toSearchScreen = {
                     onChangeMap(State.Search)
                 }, toRouteScreen = {
-                    mapTool.startRouteSearch(
+                    mapSearchUtil.startRouteSearch(
                         mStartPoint = LatLonPoint(30.507964, 114.413512), mEndPoint = mEndPoint
                     )
                 }, clear = {
                     mapView.map.clear()
-                    initPoints(mapView, LocalContext.current)
+                    initPoints(mapView, context)
                 })
             }
 
             State.Search -> {
                 ShowSearchScreen(poiList = pois,
-                    toShowMapScreen = { currentScreen = State.Map },
+                    toShowMapScreen = { onChangeMap(State.Map) },
                     searchForPoi = {
-                        mapTool.searchForPoi(it)
+                        mapSearchUtil.searchForPoi(it)
                     },
-                    onSelected = { mapTool.onSelected(it) })
+                    onSelected = { mapSearchUtil.onSelected(it) })
             }
 
             State.Route -> {
                 mapView.removeAllViews()
-                mapTool.startRouteSearch(
+                mapSearchUtil.startRouteSearch(
                     mStartPoint = LatLonPoint(30.507964, 114.413512), mEndPoint = mEndPoint
                 )
-                RouteSearchScreen(mapView = mapView) { currentScreen = State.Map }
+                RouteSearchScreen(mapView = mapView) { onChangeMap(State.Map) }
             }
         }
     }

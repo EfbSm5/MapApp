@@ -34,7 +34,7 @@ import com.example.hust_map.data.Markers
 
 @Composable
 fun ShowSearchScreen(
-    poiList: ArrayList<Markers>,
+    poiList: List<Markers>?,
     toShowMapScreen: () -> Unit,
     searchForPoi: (keyword: String) -> Unit,
     onSelected: (marker: Markers) -> Unit
@@ -74,26 +74,28 @@ fun ShowSearchScreen(
             }
 
             item { Spacer(modifier = Modifier.height(50.dp)) }
-            items(poiList) { poiItem ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
-                        .clickable {
-                            onSelected(poiItem)
-                            toShowMapScreen()
-                        },
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = poiItem.name,
-                        style = TextStyle(fontSize = 20.sp),
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.outline
-                    )
+            poiList?.let {
+                items(it) { poiItem ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .clickable {
+                                onSelected(poiItem)
+                                toShowMapScreen()
+                            },
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = poiItem.name,
+                            style = TextStyle(fontSize = 20.sp),
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                    DividerDefaults
                 }
-                DividerDefaults
             }
         }
     }
