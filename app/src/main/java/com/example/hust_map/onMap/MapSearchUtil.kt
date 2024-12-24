@@ -19,14 +19,16 @@ import com.amap.api.services.route.WalkRouteResult
 import com.example.hust_map.R
 import com.example.hust_map.data.Markers
 import com.example.hust_map.data.MarkersInSchool
+import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLng
 import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
 import com.example.hust_map.overlay.WalkRouteOverlay
-import com.example.hust_map.ultis.MapUtil.convertToLatLng
 
 class MapSearchUtil(
     private val context: Context,
     private val mapView: MapView,
-    private val callBack: () -> Unit
+    val onPoiSearched: (ArrayList<Markers>) -> Unit,
+    val returnMsg: (String) -> Unit,
+    val returnPoint: (point: LatLonPoint) -> Unit
 ) : PoiSearchV2.OnPoiSearchListener, RouteSearch.OnRouteSearchListener {
     private var routeSearch: RouteSearch? = null
 
@@ -35,7 +37,7 @@ class MapSearchUtil(
         Thread {
             val result = MarkersInSchool.searchFromMarkers(keyword = keyword)
             if (result != null) {
-                callBack.returnPoi(arrayListOf(result))
+                onPoiSearched(arrayListOf(result))
                 return@Thread
             }
             ServiceSettings.updatePrivacyShow(context, true, true)
@@ -56,7 +58,7 @@ class MapSearchUtil(
     override fun onPoiSearched(p0: PoiResultV2?, p1: Int) {
         val arrayList =
             p0!!.pois.map { poi -> Markers(poi.title, convertToLatLng(poi.latLonPoint)) }
-        callBack.returnPoi(ArrayList(arrayList))
+        onPoiSearched(ArrayList(arrayList))
     }
 
     override fun onPoiItemSearched(p0: PoiItemV2?, p1: Int) {
@@ -92,18 +94,17 @@ class MapSearchUtil(
     override fun onDriveRouteSearched(p0: DriveRouteResult?, p1: Int) {}
 
     override fun onWalkRouteSearched(walkRouteResult: WalkRouteResult?, p1: Int) {
-        callBack.returnMsg("由于测试，将出发点定于南大门")
         mapView.map.clear() // 清理地图上的所有覆盖物
         if (p1 != AMapException.CODE_AMAP_SUCCESS) {
-            callBack.returnMsg("出错了")
+            returnMsg("出错了")
             return
         }
         if (walkRouteResult?.paths == null) {
-            callBack.returnMsg("没有搜索到相关数据")
+            returnMsg("没有搜索到相关数据")
             return
         }
         if (walkRouteResult.paths.isEmpty()) {
-            callBack.returnMsg("没有搜索到相关数据")
+            returnMsg("没有搜索到相关数据")
             return
         }
         val walkPath = walkRouteResult.paths[0] ?: return
@@ -120,14 +121,8 @@ class MapSearchUtil(
     fun onSelected(markers: Markers) {
         val point = markers.latLng
         mapView.map.animateCamera(CameraUpdateFactory.newLatLngZoom(point, 18f))
-        callBack.returnPoint(convertToLatLonPoint(point))
-        callBack.returnMsg("你选择了${markers.name}")
+        returnPoint(convertToLatLonPoint(point))
+        returnMsg("你选择了${markers.name}")
     }
 }
 
-
-interface MapSearchCallBack {
-    fun returnPoi(items: ArrayList<Markers>)
-    fun returnMsg(word: String)
-    fun returnPoint(point: LatLonPoint)
-}

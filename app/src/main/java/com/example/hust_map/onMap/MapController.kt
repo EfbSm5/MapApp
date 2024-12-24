@@ -26,17 +26,18 @@ import com.amap.api.maps.model.Marker
 import com.amap.api.maps.model.MyLocationStyle
 import com.amap.api.maps.model.Poi
 import com.amap.api.maps.model.VisibleRegion
-import com.amap.api.services.core.LatLonPoint
 import com.example.hust_map.data.MarkersInSchool.updateAndChangeMarkerIcon
 import com.example.hust_map.data.MarkersInSchool.getPoints
 import com.example.hust_map.data.MarkersInSchool.initPoints
-import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
-import com.example.hust_map.ultis.MapUtil
 import kotlin.math.abs
 
 
-class MapController(context: Context, private val callBack: MapControllerCallBack) : LocationSource,
-    AMap.OnMapClickListener, AMap.OnPOIClickListener, AMap.OnMarkerClickListener,
+class MapController(
+    context: Context,
+    onPoiClick: (Poi?) -> Unit,
+    onMapClick: (LatLng?) -> Unit,
+    onMarkerClick: (Marker?) -> Unit
+) : LocationSource, AMap.OnMapClickListener, AMap.OnPOIClickListener, AMap.OnMarkerClickListener,
     AMapLocationListener {
     private var mLocationOption =
         AMapLocationClientOption().setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy)
@@ -46,15 +47,15 @@ class MapController(context: Context, private val callBack: MapControllerCallBac
     private val _context = context
 
     @Composable
-    fun MapView.MapLifecycle() {
+    fun MapLifecycle(mapView: MapView) {
         mLocationClient.setLocationOption(mLocationOption)
         mLocationClient.setLocationListener(this@MapController)
         val context = LocalContext.current
         val lifecycle = LocalLifecycleOwner.current.lifecycle
-        initPoints(mapView = this, LocalContext.current)
+        initPoints(mapView = mapView, LocalContext.current)
         DisposableEffect(context, lifecycle, this) {
-            val mapLifecycleObserver = this@MapLifecycle.lifecycleObserver()
-            val callbacks = this@MapLifecycle.componentCallbacks()
+            val mapLifecycleObserver = mapView.lifecycleObserver()
+            val callbacks = mapView.componentCallbacks()
             lifecycle.addObserver(mapLifecycleObserver)
             context.registerComponentCallbacks(callbacks)
             onDispose {
@@ -89,7 +90,7 @@ class MapController(context: Context, private val callBack: MapControllerCallBac
         }
     }
 
-    private fun MapView.initMap(mapView: MapView) {
+    private fun initMap(mapView: MapView) {
         mapView.map.setLocationSource(this@MapController)
         mapView.map.mapType = AMap.MAP_TYPE_SATELLITE
         val visibleRegion = VisibleRegion(
@@ -129,17 +130,19 @@ class MapController(context: Context, private val callBack: MapControllerCallBac
     }
 
     override fun onMapClick(p0: LatLng?) {
-        callBack.returnEndLocation(convertToLatLonPoint(p0!!), "地图")
+        onMapClick(p0)
     }
 
     override fun onPOIClick(p0: Poi?) {
-        callBack.returnEndLocation(convertToLatLonPoint(p0!!.coordinate), p0.name)
+        onPOIClick(p0)
     }
 
     @SuppressLint("ResourceType", "InflateParams")
     override fun onMarkerClick(marker: Marker?): Boolean {
-        callBack.returnEndLocation((convertToLatLonPoint(marker!!.position)), marker.title)
-        updateAndChangeMarkerIcon(marker, _context)
+        onMarkerClick(marker)
+        if (marker != null) {
+            updateAndChangeMarkerIcon(marker, _context)
+        }
         return true
     }
 
@@ -150,7 +153,6 @@ class MapController(context: Context, private val callBack: MapControllerCallBac
             val latitude = aMapLocation.latitude
             val longitude = aMapLocation.longitude
             val point = LatLng(latitude, longitude)
-            callBack.returnNowLocation(MapUtil.convertToLatLonPoint(point))
             val points = getPoints()
             for (marker in points) {
                 if (abs(marker.position.latitude - point.latitude) < 0.0005 || abs(marker.position.longitude - point.longitude) < 0.0005) {
@@ -160,11 +162,4 @@ class MapController(context: Context, private val callBack: MapControllerCallBac
         }
     }
 }
-
-interface MapControllerCallBack {
-    fun returnEndLocation(point: LatLonPoint, name: String)
-    fun returnNowLocation(point: LatLonPoint)
-    fun returnMsg(msg: String)
-}
-
 

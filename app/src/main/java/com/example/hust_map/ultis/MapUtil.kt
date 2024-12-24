@@ -7,14 +7,6 @@ import java.text.DecimalFormat
 
 
 object MapUtil {
-    fun convertToLatLonPoint(latLng: LatLng): LatLonPoint {
-        return LatLonPoint(latLng.latitude, latLng.longitude)
-    }
-
-    fun convertToLatLng(latLonPoint: LatLonPoint): LatLng {
-        return LatLng(latLonPoint.latitude, latLonPoint.longitude)
-    }
-
     fun getFriendlyTime(second: Int): String {
         if (second > 3600) {
             val hour = second / 3600

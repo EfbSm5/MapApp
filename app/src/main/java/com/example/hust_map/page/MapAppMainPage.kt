@@ -1,6 +1,7 @@
 package com.example.hust_map.page
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
@@ -38,13 +39,16 @@ import com.amap.api.services.core.LatLonPoint
 import com.example.hust_map.data.Markers
 import com.example.hust_map.data.MarkersInSchool.initMarkerData
 import com.example.hust_map.data.MarkersInSchool.initPoints
+import com.example.hust_map.onMap.MapController
 import com.example.hust_map.onMap.MapControllerCallBack
 import com.example.hust_map.onMap.MapSearchUtil
+import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
 
 @Composable
 fun MapApp() {
     val context = LocalContext.current
     var currentScreen: State by remember { mutableStateOf(State.Map) }
+    var mEndPoint: LatLonPoint = convertToLatLonPoint(LatLng(30.513197, 114.413301))
     val mapView = MapView(
         context, AMapOptions().camera(
             CameraPosition(
@@ -52,24 +56,39 @@ fun MapApp() {
             )
         )
     )
-    mapView.
-    var expanded by remember { mutableStateOf(false) }
-    val mapSearchUtil = MapSearchUtil(context = context, mapView = mapView, callBack = {
-        MapControllerCallBack() {
-
+    val mapController = MapController(context = context, onPoiClick = {
+        it.let {
+            mEndPoint = convertToLatLonPoint(it!!.coordinate)
+        }
+    }, onMapClick = {
+        it?.let {
+            mEndPoint = convertToLatLonPoint(it)
+        }
+    }, onMarkerClick = {
+        it?.let {
+            mEndPoint = convertToLatLonPoint(it.position)
         }
     })
-
-    MapAppSurface(
-        expanded = expanded,
-        currentScreen = currentScreen,
+    var expanded by remember { mutableStateOf(false) }
+    val mapSearchUtil = MapSearchUtil(
+        context = context, mapView = mapView,
+        onPoiSearched = { },
+        returnMsg = {},
+        returnPoint = {},
+    )
+    MapAppSurface(expanded = expanded,
         onChangeExpanded = { expanded = it },
         onFactoryReset = { initMarkerData(context = context, reset = true) },
         onChangeScreen = { currentScreen = it },
-        onChangeMap = {}
-    )
-
-
+        onChangeMap = {},
+        content = {
+            MapContent(
+                currentScreen = currentScreen,
+                mEndPoint = mEndPoint,
+                mapView = mapView,
+                onChangeMap = { currentScreen = it },
+            )
+        })
 }
 
 
@@ -77,11 +96,11 @@ fun MapApp() {
 @Composable
 fun MapAppSurface(
     expanded: Boolean,
-    currentScreen: State,
     onChangeExpanded: (Boolean) -> Unit,
     onFactoryReset: () -> Unit,
     onChangeScreen: (State) -> Unit,
-    onChangeMap: () -> Unit
+    onChangeMap: () -> Unit,
+    content: @Composable () -> Unit
 ) {
     Scaffold(topBar = {
         TopAppBar(title = { Text(text = "这是一个地图APP") }, navigationIcon = {
@@ -113,7 +132,7 @@ fun MapAppSurface(
 
     }) { paddingValues ->
         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(paddingValues)) {
-            MapContent(currentScreen)
+            content()
         }
     }
 }
@@ -141,7 +160,7 @@ private fun MapContent(
                     )
                 }, clear = {
                     mapView.map.clear()
-                    initPoints(mapView, this@MainActivity)
+                    initPoints(mapView, LocalContext.current)
                 })
             }
 
@@ -165,25 +184,6 @@ private fun MapContent(
     }
 }
 
-override fun returnPoi(items: ArrayList<Markers>) {
-    TODO("Not yet implemented")
-}
-
-override fun returnMsg(word: String) {
-    TODO("Not yet implemented")
-}
-
-override fun returnPoint(point: LatLonPoint) {
-    TODO("Not yet implemented")
-}
-
-override fun returnEndLocation(point: LatLonPoint, name: String) {
-    TODO("Not yet implemented")
-}
-
-override fun returnNowLocation(point: LatLonPoint) {
-    TODO("Not yet implemented")
-}
 
 interface State {
     data object Map : State
