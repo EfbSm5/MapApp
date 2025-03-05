@@ -1,4 +1,4 @@
-package com.example.hust_map.overlay
+package com.example.hust_map.onMap.overlay
 
 import android.graphics.Bitmap
 import com.amap.api.maps.model.LatLng

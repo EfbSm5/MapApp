@@ -19,9 +19,9 @@ import com.amap.api.services.route.WalkRouteResult
 import com.example.hust_map.R
 import com.example.hust_map.data.Markers
 import com.example.hust_map.data.MarkersInSchool
-import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLng
-import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
-import com.example.hust_map.overlay.WalkRouteOverlay
+import com.example.hust_map.onMap.overlay.AMapServicesUtil.convertToLatLng
+import com.example.hust_map.onMap.overlay.AMapServicesUtil.convertToLatLonPoint
+import com.example.hust_map.onMap.overlay.WalkRouteOverlay
 
 class MapSearchUtil(
     private val context: Context,

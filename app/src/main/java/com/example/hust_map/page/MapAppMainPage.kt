@@ -41,7 +41,7 @@ import com.example.hust_map.data.MarkersInSchool.initMarkerData
 import com.example.hust_map.data.MarkersInSchool.initPoints
 import com.example.hust_map.onMap.MapController
 import com.example.hust_map.onMap.MapSearchUtil
-import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLonPoint
+import com.example.hust_map.onMap.overlay.AMapServicesUtil.convertToLatLonPoint
 import com.example.hust_map.ultis.MapUtil.changeMapType
 import com.example.hust_map.ultis.MapUtil.showMsg
 

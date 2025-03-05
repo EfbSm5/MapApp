@@ -1,4 +1,4 @@
-package com.example.hust_map.overlay
+package com.example.hust_map.onMap.overlay
 
 import android.content.Context
 import android.graphics.Bitmap

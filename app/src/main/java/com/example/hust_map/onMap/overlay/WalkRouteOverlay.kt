@@ -1,4 +1,4 @@
-package com.example.hust_map.overlay
+package com.example.hust_map.onMap.overlay
 
 import android.content.Context
 import com.amap.api.maps.AMap
@@ -9,8 +9,8 @@ import com.amap.api.maps.model.PolylineOptions
 import com.amap.api.services.core.LatLonPoint
 import com.amap.api.services.route.WalkPath
 import com.amap.api.services.route.WalkStep
-import com.example.hust_map.overlay.AMapServicesUtil.convertArrList
-import com.example.hust_map.overlay.AMapServicesUtil.convertToLatLng
+import com.example.hust_map.onMap.overlay.AMapServicesUtil.convertArrList
+import com.example.hust_map.onMap.overlay.AMapServicesUtil.convertToLatLng
 
 
 /**
